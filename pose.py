@@ -1,12 +1,13 @@
+#install all these libraries
 import cv2
 import mediapipe as mp
 import numpy as np
 
-# Initialize mediapipe drawing and pose utilities
+# Initialize mediapipe drawing and pose utilities, mediapipe provide pre-trained model for hand tracking, pose detection in this case.
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
-# Function to calculate angle between three points
+# this is a Function to calculate the angle between three points.
 def calculate_angle(a, b, c):
     a = np.array(a)  # First point
     b = np.array(b)  # Mid point
@@ -26,6 +27,10 @@ stage = None
 
 # Open the video capture stream
 cap = cv2.VideoCapture(0)
+# Set camera resolution (increase width and height)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)  # Set width to 1280 pixels
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)  # Set height to 720 pixels
+
 
 # Check if the camera opened successfully
 if not cap.isOpened():
@@ -45,12 +50,13 @@ with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as 
 
         # Recolor the image from BGR to RGB for mediapipe processing
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        image.flags.writeable = False  # Improve performance by disabling writeability
+        # Improve performance by disabling writeability
+        image.flags.writeable = False 
 
         # Make pose detection
         results = pose.process(image)
 
-        # Recolor the image back to BGR for OpenCV rendering
+        # Recolor the image back to BGR for OpenCV rendering.
         image.flags.writeable = True
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
@@ -58,7 +64,7 @@ with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as 
         if results.pose_landmarks:
             landmarks = results.pose_landmarks.landmark
             
-            # Get coordinates of shoulder, elbow, and wrist for angle calculation
+            # Get coordinates of shoulder, elbow, and wrist for angle calculation.
             try:
                 shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x,
                             landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
@@ -75,7 +81,7 @@ with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as 
                            tuple(np.multiply(elbow, [640, 480]).astype(int)), 
                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
 
-                # Curl counter logic
+                # Curl counter algorithm
                 if angle > 160:
                     stage = "down"
                 if angle < 30 and stage == 'down':
